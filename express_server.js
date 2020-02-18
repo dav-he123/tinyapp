@@ -38,11 +38,22 @@ app.get("/urls/:shortURL", (req, res) => {
     longURL: urlDatabase[req.params.shortURL]
   };
   res.render("urls_show", templateVars);
+  return;
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL);
+  return;
 });
 
 app.post("/urls", (req, res) => {
+  let longURL = req.body.longURL;
+  let shortURL = generateRandomString();
+  urlDatabase[shortURL] = longURL;
+  console.log(shortURL);
   console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  res.redirect("/urls/" + shortURL);
 });
 
 app.listen(PORT, () => {
@@ -50,6 +61,8 @@ app.listen(PORT, () => {
 });
 
 function generateRandomString() {
-  let randString = Math.random.toString(36).substring(2, 8);
+  let randString = Math.random()
+    .toString(36)
+    .substring(2, 8);
   return randString;
 }
