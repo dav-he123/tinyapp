@@ -18,25 +18,23 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <% if(username === undefined) { %>
+    <% if(username) { %>
     <form class="form-inline" action="/login" method="POST">
       <div class="form-group mb-2">
-        <!-- <label for="longURL">Username:</label> -->
-        <input
-          class="form-control"
-          type="text"
-          placeholder="Username"
-          name="username"
-          style="width: 300px; margin: 1em"
-        />
-        <button type="submit" class="btn btn-primary">Login</button>
+        <a class="nav-item nav-link" href="/login">Login</a>
+        <a class="nav-item nav-link" href="/register">Register</a>
       </div>
     </form>
     <% } else { %>
     <form class="form-inline" action="/logout" method="POST">
       <div class="form-group mb-2">
-        <label for="username">Logged in as: <%= username %></label>
-        <button type="submit" class="btn btn-primary">Logout</button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          style="background-color:transparent; border-color:black; color:black;"
+        >
+          Logout
+        </button>
       </div>
     </form>
     <% } %>
