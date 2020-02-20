@@ -7,9 +7,14 @@ app.set("view engine", "ejs");
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// const urlDatabase = {
+//   b2xVn2: "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
+
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 const users = {
@@ -42,13 +47,31 @@ app.get("/urls", (req, res) => {
   console.log(req.cookies.user_id);
 
   // console.log("user", users[req.cookies["user_id"]]);
-  let templateVars = { urls: urlDatabase, user: users[req.cookies.user_id] };
+  // let templateVars = { urls: urlDatabase, user: users[req.cookies.user_id] };
+
+  let user;
+  if (req.cookies.user_id) {
+    user = req.cookies.user_id;
+  } else {
+    res.redirect("/login");
+    return;
+  }
+
+  let templateVars = {
+    urls: urlsForUser(req.cookies.user_id),
+    user: users[user]
+  };
 
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
   let templateVars = { user: users[req.cookies.user_id] };
+
+  if (!req.cookies.user_id) {
+    res.redirect("/login");
+    return;
+  }
   res.render("urls_new", templateVars);
 });
 
@@ -85,18 +108,31 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  delete urlDatabase[req.params.shortURL];
+  if (urlDatabase[req.params.shortURL].userID === req.cookies.user_id)
+    delete urlDatabase[req.params.shortURL];
+  else {
+    res.statusCode = 403;
+    res.send();
+    return;
+  }
   res.redirect("/urls");
 });
 
 app.post("/urls/:shortURL", (req, res) => {
-  urlDatabase[req.params.shortURL] = req.body.longURL;
+  if (urlDatabase[req.params.shortURL].userID === req.cookies.user_id) {
+    urlDatabase[req.params.shortURL] = req.body.longURL;
+  } else {
+    res.statusCode = 403;
+    res.send();
+  }
   res.redirect("/urls");
 });
 
 app.post("/login", (req, res) => {
   // res.cookie("user_id", req.body.username);
   const { email, password } = req.body;
+
+  console.log("request", req.body);
   if (email === "" || password === "") {
     res.statusCode = 403;
     res.end("The email or password is empty. Status code: 403");
@@ -114,7 +150,7 @@ app.post("/login", (req, res) => {
       } else {
         res.statusCode = 403;
         res.end(
-          "Invalid password, please try again. The password is case sensitive"
+          "Invalid password, please try again. The password is case sensitive."
         );
       }
     }
@@ -158,11 +194,17 @@ app.post("/register", (req, res) => {
 // });
 
 app.post("/urls", (req, res) => {
-  let longURL = req.body.longURL;
+  // let longURL = req.body.longURL;
   let shortURL = generateRandomString();
-  urlDatabase[shortURL] = longURL;
-  console.log(shortURL);
-  console.log(req.body); // Log the POST request body to the console
+  // urlDatabase[shortURL] = longURL;
+
+  urlDatabase[shortURL] = {
+    longURL: req.body.longURL,
+    userID: req.cookies.user_id
+  };
+
+  // console.log(shortURL);
+  // console.log(req.body); // Log the POST request body to the console
   res.redirect("/urls/" + shortURL);
 });
 
@@ -195,3 +237,14 @@ const emailLookup = function(users, email) {
   }
   return false;
 };
+
+function urlsForUser(id) {
+  const result = {};
+  for (const obj in urlDatabase) {
+    if (urlDatabase[obj].userID === id) {
+      result[obj] = urlDatabase[obj];
+    }
+  }
+  console.log(result);
+  return result;
+}
