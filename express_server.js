@@ -3,6 +3,8 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = 8080; // default port 8080
+const bcrypt = require("bcrypt");
+
 app.set("view engine", "ejs");
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -130,6 +132,7 @@ app.post("/urls/:shortURL", (req, res) => {
 
 app.post("/login", (req, res) => {
   // res.cookie("user_id", req.body.username);
+
   const { email, password } = req.body;
 
   console.log("request", req.body);
@@ -144,7 +147,7 @@ app.post("/login", (req, res) => {
         "This username is not recognized. User is not found! Please try again!"
       );
     } else {
-      if (password === user.password) {
+      if (bcrypt.compareSync(req.body.password, user.password)) {
         res.cookie("user_id", user.id);
         res.redirect("/urls");
       } else {
@@ -178,8 +181,9 @@ app.post("/register", (req, res) => {
   users[randomID] = {
     id: randomID,
     email: req.body.email,
-    password: req.body.password
+    password: bcrypt.hashSync(req.body.password, 10)
   };
+
   res.cookie("user_id", randomID);
 
   console.log(users[randomID]);
