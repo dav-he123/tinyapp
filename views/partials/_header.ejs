@@ -18,7 +18,7 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <% if(username) { %>
+    <% if(!user) { %>
     <form class="form-inline" action="/login" method="POST">
       <div class="form-group mb-2">
         <a class="nav-item nav-link" href="/login">Login</a>
@@ -26,6 +26,7 @@
       </div>
     </form>
     <% } else { %>
+    <p>Logged in as: <%= user.email %></p>
     <form class="form-inline" action="/logout" method="POST">
       <div class="form-group mb-2">
         <button

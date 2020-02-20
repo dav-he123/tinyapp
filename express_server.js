@@ -70,7 +70,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.get("/register", (req, res) => {
   let templateVars = {
-    username: undefined
+    user: undefined //I need to make sure no logged in user can see this
   };
 
   res.render("urls_registration", templateVars);
@@ -78,8 +78,9 @@ app.get("/register", (req, res) => {
 
 app.get("/login", (req, res) => {
   let templateVars = {
-    username: undefined
+    user: undefined
   };
+
   res.render("urls_login", templateVars);
 });
 
@@ -94,12 +95,34 @@ app.post("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
-  res.redirect("/urls");
+  // res.cookie("user_id", req.body.username);
+  const { email, password } = req.body;
+  if (email === "" || password === "") {
+    res.statusCode = 403;
+    res.end("The email or password is empty. Status code: 403");
+  } else {
+    const user = emailLookup(users, email);
+    if (!user) {
+      res.statusCode = 403;
+      res.end(
+        "This username is not recognized. User is not found! Please try again!"
+      );
+    } else {
+      if (password === user.password) {
+        res.cookie("user_id", user.id);
+        res.redirect("/urls");
+      } else {
+        res.statusCode = 403;
+        res.end(
+          "Invalid password, please try again. The password is case sensitive"
+        );
+      }
+    }
+  }
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
 
@@ -117,8 +140,8 @@ app.post("/register", (req, res) => {
   let randomID = generateRandomString();
 
   users[randomID] = {
-    id: "randomID",
-    email: "req.body.email",
+    id: randomID,
+    email: req.body.email,
     password: req.body.password
   };
   res.cookie("user_id", randomID);
@@ -158,6 +181,16 @@ const emailCheck = function(users, email) {
   for (const check of Object.keys(users)) {
     if (email === users[check].email) {
       return true;
+    }
+  }
+  return false;
+};
+
+const emailLookup = function(users, email) {
+  for (const objectKey of Object.keys(users)) {
+    if (email === users[objectKey].email) {
+      console.log("true");
+      return users[objectKey];
     }
   }
   return false;
