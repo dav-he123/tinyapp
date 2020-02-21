@@ -12,11 +12,6 @@ app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieSession({ name: "user_id", secret: "asdfg" }));
 
-// const urlDatabase = {
-//   b2xVn2: "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com"
-// };
-
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
@@ -49,9 +44,6 @@ app.get("/hello", (req, res) => {
 
 app.get("/urls", (req, res) => {
   console.log("users", users);
-
-  // console.log("user", users[req.cookies["user_id"]]);
-  // let templateVars = { urls: urlDatabase, user: users[req.cookies.user_id] };
 
   let user;
   if (req.session.user_id) {
@@ -93,7 +85,7 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
   return;
 });
@@ -126,12 +118,9 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post("/urls/:shortURL", (req, res) => {
-  // console.log("firstURL", urlDatabase[req.params.shortURL]);
   if (urlDatabase[req.params.shortURL].userID === req.session.user_id) {
     urlDatabase[req.params.shortURL].longURL = req.body.longURL;
-    // console.log("secondurl", urlDatabase[req.params.shortURL]);
   } else {
-    // console.log("thirdurl", urlDatabase[req.params.shortURL]);
     res.statusCode = 403;
     res.send();
   }
@@ -139,21 +128,18 @@ app.post("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  // res.cookie("user_id", req.body.username);
-
   const { email, password } = req.body;
 
-  // console.log("request", req.body);
   if (email === "" || password === "") {
     res.statusCode = 403;
-    res.end("The email or password is empty. Status code: 403");
+    res.end("The email or password is empty. Status code: 403"); // In browser if username or password is empty, the message, "The email or password is empty. Status code: 403", is displayed.
   } else {
     const user = emailLookup(users, email);
     if (!user) {
       res.statusCode = 403;
       res.end(
         "This username is not recognized. User is not found! Please try again!"
-      );
+      ); // In browser if user inputs a wrong username in the login page. When a account is registered the message, "This username is not recognized. User is not found! Please try again!", is displayed.
     } else {
       if (bcrypt.compareSync(req.body.password, user.password)) {
         req.session.user_id = user.id;
@@ -162,11 +148,11 @@ app.post("/login", (req, res) => {
         res.statusCode = 403;
         res.end(
           "Invalid password, please try again. The password is case sensitive."
-        );
+        ); //In browser if user inputs a password that is wrong in the login page, the message ""Invalid password, please try again. The password is case sensitive." is displayed
       }
     }
   }
-  // getUserByEmail(req.body.email, users);
+  getUserByEmail(req.body.email, users);
 });
 
 app.post("/logout", (req, res) => {
@@ -180,10 +166,11 @@ app.post("/register", (req, res) => {
   if (email === "" || password === "") {
     res.statusCode = 400;
     res.end("The email or password is empty. Status code: 400");
+    //This error message shows up if the user does not register email or password in the browser.
   } else if (emailCheck(users, req.body.email)) {
     res.statusCode = 400;
     res.end("The email is already being used. Status code: 400");
-  }
+  } //This error message shows up when user registers the same username and password that has already been registered
 
   let randomID = generateRandomString();
 
@@ -196,24 +183,14 @@ app.post("/register", (req, res) => {
 
   req.session.user_id = randomID;
 
-  // getUserByEmail(req.body.email, users);
+  getUserByEmail(req.body.email, users);
 
-  // console.log(users[randomID]);
   res.redirect("/urls");
 });
 
-// app.post("/urls/:shortURL", (req, res) => {
-//   let longURL = req.params.longURL;
-//   urlDatabase[req.params.shortURL] = longURL;
-
-//   res.redirect("/urls");
-// });
-
 app.post("/urls", (req, res) => {
-  // let longURL = req.body.longURL;
   let shortURL = generateRandomString();
-  // urlDatabase[shortURL] = longURL;
-  // console.log(req.body);
+
   urlDatabase[shortURL] = {
     longURL: req.body.longURL,
     userID: req.session.user_id
@@ -234,6 +211,7 @@ function generateRandomString() {
 }
 
 const emailCheck = function(users, email) {
+  //The emailCheck function is used to compare the email in users object with email inputted by the user.
   for (const check of Object.keys(users)) {
     if (email === users[check].email) {
       return true;
@@ -243,6 +221,8 @@ const emailCheck = function(users, email) {
 };
 
 const emailLookup = function(users, email) {
+  // The emailLookup function is used to compare the email in users object with email inputted into the browser and returns email stored in object
+
   for (const objectKey of Object.keys(users)) {
     if (email === users[objectKey].email) {
       console.log("true");
