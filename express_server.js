@@ -80,11 +80,14 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
+  console.log(req.session.user_id);
   let templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
     user: users[req.session.user_id]
   };
+  console.log("templateVarsString", templateVars);
+  console.log("urlsDatabase", urlDatabase);
   res.render("urls_show", templateVars);
   return;
 });
@@ -97,7 +100,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.get("/register", (req, res) => {
   let templateVars = {
-    user: undefined //I need to make sure no logged in user can see this
+    user: undefined //Need to make sure no logged in user can see this
   };
 
   res.render("urls_registration", templateVars);
@@ -123,9 +126,12 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post("/urls/:shortURL", (req, res) => {
+  // console.log("firstURL", urlDatabase[req.params.shortURL]);
   if (urlDatabase[req.params.shortURL].userID === req.session.user_id) {
-    urlDatabase[req.params.shortURL] = req.body.longURL;
+    urlDatabase[req.params.shortURL].longURL = req.body.longURL;
+    // console.log("secondurl", urlDatabase[req.params.shortURL]);
   } else {
+    // console.log("thirdurl", urlDatabase[req.params.shortURL]);
     res.statusCode = 403;
     res.send();
   }
@@ -137,7 +143,7 @@ app.post("/login", (req, res) => {
 
   const { email, password } = req.body;
 
-  console.log("request", req.body);
+  // console.log("request", req.body);
   if (email === "" || password === "") {
     res.statusCode = 403;
     res.end("The email or password is empty. Status code: 403");
@@ -186,6 +192,7 @@ app.post("/register", (req, res) => {
     email: req.body.email,
     password: bcrypt.hashSync(req.body.password, 10)
   };
+  console.log("users:", users);
 
   req.session.user_id = randomID;
 
@@ -206,14 +213,12 @@ app.post("/urls", (req, res) => {
   // let longURL = req.body.longURL;
   let shortURL = generateRandomString();
   // urlDatabase[shortURL] = longURL;
-
+  // console.log(req.body);
   urlDatabase[shortURL] = {
     longURL: req.body.longURL,
     userID: req.session.user_id
   };
 
-  // console.log(shortURL);
-  // console.log(req.body); // Log the POST request body to the console
   res.redirect("/urls/" + shortURL);
 });
 
