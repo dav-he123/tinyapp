@@ -165,12 +165,11 @@ app.post("/register", (req, res) => {
 
   if (email === "" || password === "") {
     res.statusCode = 400;
-    res.end("The email or password is empty. Status code: 400");
-    //This error message shows up if the user does not register email or password in the browser.
+    res.end("The email or password is empty. Status code: 400"); //This error message shows up if the user does not register email or password in the browser.
   } else if (emailCheck(users, req.body.email)) {
     res.statusCode = 400;
-    res.end("The email is already being used. Status code: 400");
-  } //This error message shows up when user registers the same username and password that has already been registered
+    res.end("The email is already being used. Status code: 400"); //This error message shows up when user registers the same username and password that has already been registered
+  }
 
   let randomID = generateRandomString();
 
@@ -222,7 +221,6 @@ const emailCheck = function(users, email) {
 
 const emailLookup = function(users, email) {
   // The emailLookup function is used to compare the email in users object with email inputted into the browser and returns email stored in object
-
   for (const objectKey of Object.keys(users)) {
     if (email === users[objectKey].email) {
       console.log("true");
